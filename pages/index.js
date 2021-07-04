@@ -9,7 +9,7 @@ export default function Home({ posts }) {
 
       <ul>
         {posts.map((post) => (
-            <li>{ post.title }</li>
+            <li key={post.id}>{ post.title }</li>
         ))}
       </ul>
     </div>
@@ -20,8 +20,8 @@ export async function getStaticProps() {
   return {
     props: {
       posts: [
-        {title: 'Primeiro post alt'},
-        {title: 'Segundo post'}
+        {id: 1, title: 'Primeiro post alt'},
+        {id: 2, title: 'Segundo post'}
       ]
     }
   }

@@ -49,8 +49,8 @@ export default class MyApp extends App {
 `);
     document.insertBefore(comment, document.documentElement);
   }
-  static async getInitialProps({ Component, router, ctx }) {
-    let pageProps = {};
+  static async getInitialProps({ Component, router, ctx, recaptchaKey }) {
+    let pageProps = { recaptchaKey };
 
     if (Component.getInitialProps) {
       pageProps = await Component.getInitialProps(ctx);
@@ -58,10 +58,12 @@ export default class MyApp extends App {
 
     return { pageProps };
   }
+
   render() {
     const { Component, pageProps } = this.props;
 
     const Layout = Component.layout || (({ children }) => <>{children}</>);
+    console.log('layout', { pageProps })
 
     return (
       <React.Fragment>
@@ -70,13 +72,23 @@ export default class MyApp extends App {
             name="viewport"
             content="width=device-width, initial-scale=1, shrink-to-fit=no"
           />
-          <title>Notus NextJS by Creative Tim</title>
+          <title>ADM Livre - Gestor Mercadolivre</title>
           <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
+          <script src={'https://www.google.com/recaptcha/api.js?render=' + pageProps.recaptchaKey}></script>
         </Head>
         <Layout>
           <Component {...pageProps} />
         </Layout>
       </React.Fragment>
     );
+  }
+}
+
+export async function getStaticProps() {
+
+  return {
+    props: {
+      recaptchaKey: process.env.RECAPTCHA_KEY
+    }
   }
 }

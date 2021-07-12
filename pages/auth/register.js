@@ -1,10 +1,77 @@
-import React from "react";
+import React, { useState } from "react";
 
 // layout for page
 
 import Auth from "layouts/Auth.js";
 
-export default function Register() {
+export default function Register(props) {
+
+  const [messageState, setMessageState] = useState(null)
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: ''
+  })
+
+  const onClickRegister =  async() => {
+    setNewUser(newUser)
+    grecaptcha.ready(async () => {
+      try {
+        const captchaResponse = await grecaptcha.execute(
+          props.recaptchaKey,
+          {action: 'submit'}
+        )
+
+        const apiResponse = await fetch('/api/v1/register', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          method: 'POST',
+          body: JSON.stringify({
+            recaptchaToken: captchaResponse,
+            user: newUser
+          })
+        })
+        console.log({ apiResponse })
+        const response = await apiResponse.json()
+
+        if (response.status == 'success') {
+          setMessageState({
+            color: 'lightBlue',
+            message: 'Usuário cadastrado com sucesso. Verifique seu email'
+          })
+          return
+        }
+        
+        setMessageState({
+          color: 'orange',
+          message: response.message
+        })
+      } catch (error) {
+        console.log('deu erro', { error })
+        setMessageState({
+          color: 'orange',
+          message: 'Houve uma falha ao realizar o registro.'
+        })
+      }
+    })
+  }
+
+  let alertError = null
+
+  if (messageState) {
+    let alertClass = `text-white px-6 py-4 border-0 rounded relative mb-4 bg-${messageState.color}-500`
+    alertError = <div className={alertClass}>
+      <span className="text-xl inline-block mr-5 align-middle">
+        <i className="fas fa-bell"></i>
+      </span>
+      <span className="inline-block align-middle mr-8">
+        {messageState.message}
+      </span>
+    </div>
+  }
+
   return (
     <>
       <div className="container mx-auto px-4 h-full">
@@ -14,16 +81,17 @@ export default function Register() {
               <div className="rounded-t mb-0 px-6 py-6">
                 <div className="text-center mb-3">
                   <h6 className="text-blueGray-500 text-sm font-bold">
-                    Sign up with
+                    Se cadastre com
                   </h6>
                 </div>
                 <div className="btn-wrapper text-center">
+                  {alertError}
                   <button
                     className="bg-white active:bg-blueGray-50 text-blueGray-700 font-normal px-4 py-2 rounded outline-none focus:outline-none mr-2 mb-1 uppercase shadow hover:shadow-md inline-flex items-center font-bold text-xs ease-linear transition-all duration-150"
                     type="button"
                   >
-                    <img alt="..." className="w-5 mr-1" src="/img/github.svg" />
-                    Github
+                    <img alt="..." className="w-5 mr-1" src="/img/facebook.svg" />
+                    Facebook
                   </button>
                   <button
                     className="bg-white active:bg-blueGray-50 text-blueGray-700 font-normal px-4 py-2 rounded outline-none focus:outline-none mr-1 mb-1 uppercase shadow hover:shadow-md inline-flex items-center font-bold text-xs ease-linear transition-all duration-150"
@@ -37,7 +105,7 @@ export default function Register() {
               </div>
               <div className="flex-auto px-4 lg:px-10 py-10 pt-0">
                 <div className="text-blueGray-400 text-center mb-3 font-bold">
-                  <small>Or sign up with credentials</small>
+                  <small>Ou informe seus dados</small>
                 </div>
                 <form>
                   <div className="relative w-full mb-3">
@@ -45,12 +113,13 @@ export default function Register() {
                       className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
                       htmlFor="grid-password"
                     >
-                      Name
+                      Nome
                     </label>
                     <input
-                      type="email"
+                      type="text"
+                      onChange={(e) => {newUser.name = e.target.value}}
                       className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                      placeholder="Name"
+                      placeholder="Informe seu nome"
                     />
                   </div>
 
@@ -63,6 +132,7 @@ export default function Register() {
                     </label>
                     <input
                       type="email"
+                      onChange={(e) => {newUser.email = e.target.value}}
                       className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
                       placeholder="Email"
                     />
@@ -73,10 +143,11 @@ export default function Register() {
                       className="block uppercase text-blueGray-600 text-xs font-bold mb-2"
                       htmlFor="grid-password"
                     >
-                      Password
+                      Senha
                     </label>
                     <input
                       type="password"
+                      onChange={(e) => {newUser.password = e.target.value}}
                       className="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
                       placeholder="Password"
                     />
@@ -90,13 +161,13 @@ export default function Register() {
                         className="form-checkbox border-0 rounded text-blueGray-700 ml-1 w-5 h-5 ease-linear transition-all duration-150"
                       />
                       <span className="ml-2 text-sm font-semibold text-blueGray-600">
-                        I agree with the{" "}
+                        Eu concordo com a {" "}
                         <a
                           href="#pablo"
                           className="text-lightBlue-500"
                           onClick={(e) => e.preventDefault()}
                         >
-                          Privacy Policy
+                          Política de privacidade
                         </a>
                       </span>
                     </label>
@@ -104,10 +175,11 @@ export default function Register() {
 
                   <div className="text-center mt-6">
                     <button
+                      onClick={(e) => onClickRegister()}
                       className="bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full ease-linear transition-all duration-150"
                       type="button"
                     >
-                      Create Account
+                      Registrar
                     </button>
                   </div>
                 </form>
@@ -121,3 +193,13 @@ export default function Register() {
 }
 
 Register.layout = Auth;
+
+
+export async function getStaticProps() {
+
+  return {
+    props: {
+      recaptchaKey: process.env.RECAPTCHA_KEY
+    }
+  }
+}
